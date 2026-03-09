@@ -1,0 +1,270 @@
+* {
+  margin: 0;
+  padding: 0;
+  border: none;
+  box-sizing: border-box;
+  font-size: 18px;
+  font-family: "Outfit", sans-serif;
+  text-decoration: none;
+}
+
+body{
+  background-color: aliceblue;
+}
+.navbar{
+  background-color: white;
+  height: 100px;
+  display:flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 30px;
+}
+
+.left-section{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 90%;
+  margin: 10px 30px;
+}
+
+.right-section{
+  display: flex;
+  align-items: center;
+  gap: 30px;
+}
+
+.right-section a{
+  color: #333;
+}
+
+.notification-bell,.profile-pic{
+  cursor: pointer;
+}
+
+.navbar-links{
+  list-style: none;
+  width: 85%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 100px;
+}
+
+.nav-link{
+  color: #333;
+  font-weight: 500;
+  
+}
+
+.navbar-links a:hover{
+  color: #7695FF;
+}
+
+.active{
+  color: #7695FF;
+  font-weight: 600;
+}
+hr{
+  height: 2px;
+  background-color: #8f8c8c;
+}
+
+.hero{
+  height: 150px;
+  width: 95%;
+  background-color: #FFD7C4;
+  border-radius: 10px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 30px 50px;
+  
+}
+
+.rent-summary{
+  height: 150px;
+  width: 95%;
+  display: flex;
+  justify-content: space-between;
+  gap: 30px;
+  margin: 30px 50px;
+}
+
+.rent-item{
+  height: 110px;
+  width: 100%;
+  background-color: white;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0px 4px 10px rgba(0,0,0,0.1);
+}
+
+.dashboard{
+  display: flex;
+  justify-content: space-between;
+  margin: 30px 50px;
+
+}
+
+.rent-status{
+  background-color: white;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 20px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  height: 400px;
+  width: 550px;
+  border: 1px solid #c6c3c3;
+}
+
+.rent-info{
+  display: flex;
+  justify-content: space-between;
+  padding: 20px;
+}
+
+.rent-title{
+  background: #f3f6fb;
+  padding: 12px;
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+  border: 1px solid rgb(211, 206, 206);
+  font-weight: 600;
+  padding: 25px;
+
+}
+
+.rent-amount{
+  font-size: 32px;
+  font-weight: 700;
+}
+
+.rent-payment-status{
+  background-color: #FFD7C4;
+  color: #FF9874;
+  height: 30px;
+  width: 90px;
+  border-radius: 15px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.rent-due-note{
+  background:#f4f6f8;
+  padding:14px;
+  border-radius:25px;
+  font-size:16px;
+  color:#666;
+  height: 50px;
+  width: 80%;
+  margin: 20px;
+}
+
+.rent-pay-btn{
+  background:#F68E64;
+  color:white;
+  padding:14px;
+  border-radius:30px;
+  cursor:pointer;
+  font-weight:200;
+  width: 200px;
+  margin: 20px;
+
+}
+
+.maintenance-section{
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  width: 100%;
+  padding-left: 40px;
+}
+
+.maintenance-header{
+  display: flex;
+  justify-content: space-between;
+}
+
+.maintenance-title{
+  padding-top: 10px;
+  font-weight: bolder;
+}
+
+.maintenance-add-btn{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 30px;
+  width: 250px;
+  border-radius: 50px;
+  background-color: #9DBDFF;
+  color: white;
+  cursor: pointer;
+}
+
+.maintenance-card{
+  display: flex;
+  justify-content: space-between;
+  height: 100px;
+  width: 100%;
+  background-color: white;
+  border-radius: 10px;
+  border: 1px solid #dddcdc;
+  padding: 10px;
+}
+
+.maintenance-status.open{
+  background-color: #f5e79f ;
+  color: #625d43;
+  border-radius: 50px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 30px;
+  width: 100px;
+  font-weight: 500;
+}
+
+.maintenance-status.resolved{
+  background-color: #b9f59f ;
+  color: #0b8117;
+  border-radius: 50px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 30px;
+  width: 150px;
+  font-weight: 500;
+}
+
+.submitted-on{
+  color: #8c8a8a;
+  font-size: 12px;
+}
+
+table{
+  background-color: white;
+  border-radius: 10px;
+  width: calc(100% - 100px);
+  margin: 30px 50px;
+  border-collapse: collapse;
+  overflow: hidden;
+}
+
+.payment-table th,
+.payment-table td{
+  padding: 16px;
+  text-align: left;
+}
+
+.payment-table thead{
+  background-color: rgb(255, 255, 255);
+}

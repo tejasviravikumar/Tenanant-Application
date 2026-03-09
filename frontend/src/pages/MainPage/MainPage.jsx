@@ -1,7 +1,7 @@
 import { CgProfile } from "react-icons/cg";
 import { IoIosNotifications } from "react-icons/io";
 import { NavLink } from "react-router-dom";
-
+import "./MainPage.css"
 function MainPage(){
 
     // const navItems = ["Dashboard","Payments","Maintenance","Profile"];
