@@ -11,6 +11,7 @@ import lombok.Builder;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Size;
 import jakarta.persistence.Id;
+import jakarta.persistence.Column;
 
 @Entity
 @Data
@@ -22,8 +23,19 @@ public class UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    private String firstname;
+
+    private String lastname;
+
+    private String phoneNumber;
+
+    private String apartmentNumber;
+
     @Email
+    @Column(unique = true)
     private String email;
+
     @Size(min = 8,message = "Password must be atleast 8 characters")
     private String password;
 }
