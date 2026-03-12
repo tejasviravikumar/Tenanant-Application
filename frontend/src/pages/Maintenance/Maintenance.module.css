@@ -1,0 +1,111 @@
+.maintenance-page {
+  background: #f8fafc;
+  min-height: 100vh;
+}
+
+.main-content {
+  padding: 40px;
+}
+
+.overview-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  margin-bottom: 40px;
+}
+
+.overview-card {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+}
+
+.primary {
+  color: #7595ff;
+}
+
+.warning {
+  color: orange;
+}
+
+.success {
+  color: green;
+}
+
+.maintenance-layout {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 40px;
+}
+
+.complaint-box {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+}
+
+.complaint-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.complaint-form input,
+.complaint-form select,
+.complaint-form textarea {
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+.submit-btn {
+  background: #ff9874;
+  border: none;
+  padding: 10px;
+  border-radius: 6px;
+  color: white;
+  cursor: pointer;
+}
+
+.requests-section {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.request-card {
+  background: white;
+  padding: 15px;
+  border-radius: 10px;
+}
+
+.status-progress {
+  color: orange;
+}
+
+.status-open {
+  color: #7595ff;
+}
+
+.history-section {
+  margin-top: 50px;
+  background: white;
+  border-radius: 10px;
+}
+
+.history-header {
+  display: flex;
+  justify-content: space-between;
+  padding: 20px;
+}
+
+.history-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.history-table th,
+.history-table td {
+  padding: 12px;
+  border-top: 1px solid #eee;
+}

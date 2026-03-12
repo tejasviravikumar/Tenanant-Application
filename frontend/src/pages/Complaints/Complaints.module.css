@@ -1,0 +1,114 @@
+.complaint-page{
+  background:#f8fafc;
+  min-height:100vh;
+}
+
+.main-container{
+  max-width:1200px;
+  margin:auto;
+  padding:40px;
+}
+
+.page-header h1{
+  font-size:28px;
+  font-weight:bold;
+}
+
+.page-header p{
+  color:#666;
+  margin-top:5px;
+}
+
+.layout-grid{
+  display:grid;
+  grid-template-columns:2fr 1fr;
+  gap:30px;
+  margin-top:30px;
+}
+
+.form-section{
+  background:white;
+  padding:25px;
+  border-radius:10px;
+}
+
+.input-field{
+  width:100%;
+  padding:10px;
+  border-radius:6px;
+  border:1px solid #ddd;
+  margin-top:10px;
+}
+
+.grid-2{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-top:10px;
+}
+
+.upload-box{
+  border:2px dashed #ddd;
+  padding:40px;
+  text-align:center;
+  margin-top:15px;
+  border-radius:10px;
+}
+
+.priority-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  margin-top:15px;
+  gap:10px;
+}
+
+.button-row{
+  display:flex;
+  gap:10px;
+  margin-top:20px;
+}
+
+.submit-btn{
+  flex:1;
+  background:#ff9874;
+  border:none;
+  padding:12px;
+  border-radius:8px;
+  color:white;
+  cursor:pointer;
+}
+
+.cancel-btn{
+  padding:12px 20px;
+  border-radius:8px;
+  border:1px solid #ddd;
+  background:white;
+}
+
+.sidebar{
+  background:white;
+  padding:20px;
+  border-radius:10px;
+}
+
+.report-item{
+  padding:10px 0;
+  border-bottom:1px solid #eee;
+}
+
+.help-card{
+  margin-top:20px;
+  padding:20px;
+  border-radius:10px;
+  background:#7595ff;
+  color:white;
+}
+
+.help-card button{
+  margin-top:10px;
+  padding:10px;
+  border:none;
+  border-radius:6px;
+  background:white;
+  color:#7595ff;
+}
