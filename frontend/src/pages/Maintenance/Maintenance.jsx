@@ -1,132 +1,329 @@
+import { useState, useRef, useEffect } from "react";
 import styles from "./Maintenance.module.css";
+import {
+  Wrench,
+  Send,
+  ClipboardList,
+  CheckCircle2,
+  AlertCircle,
+  Clock3,
+  Phone,
+  Search,
+  MoreHorizontal,
+  ChevronDown,
+  X,
+} from "lucide-react";
+
+const CameraPlus = ({ size = 24, ...props }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+    <circle cx="12" cy="13" r="4"/>
+    <line x1="12" y1="11" x2="12" y2="15"/>
+    <line x1="10" y1="13" x2="14" y2="13"/>
+  </svg>
+);
+
+const CATEGORIES = ["Select Category", "Plumbing", "Electrical", "HVAC / AC", "Appliances", "Structural", "Other"];
+const LOCATIONS  = ["Select Area", "Kitchen", "Bedroom", "Bathroom", "Living Room", "Entrance", "Balcony", "Common Area"];
+const PRIORITIES = ["Low", "Medium", "Urgent"];
+
+const STATUS_META = {
+  "IN PROGRESS": { icon: <Clock3 size={10} strokeWidth={2.5} />, cls: "sp", label: "In Progress" },
+  "RESOLVED": { icon: <CheckCircle2 size={10} strokeWidth={2.5} />, cls: "sr", label: "Resolved" },
+  "OPEN": { icon: <AlertCircle size={10} strokeWidth={2.5} />, cls: "so", label: "Open" },
+};
 
 export default function Maintenance() {
+
+  const [form, setForm] = useState({
+    title: "",
+    category: "Select Category",
+    location: "Select Area",
+    description: "",
+    priority: "Low"
+  });
+
+  const [photos, setPhotos] = useState([]);
+  const [search, setSearch] = useState("");
+  const [toast, setToast] = useState("");
+  const [errors, setErrors] = useState({});
+  const [complaints, setComplaints] = useState([]);
+
+  const fileRef = useRef();
+
+  const showToast = (msg) => {
+    setToast(msg);
+    setTimeout(() => setToast(""), 2400);
+  };
+
+  useEffect(() => {
+    fetchComplaints();
+  }, []);
+
+  const fetchComplaints = async () => {
+    try {
+      const res = await fetch("http://localhost:8080/api/maintenance");
+      const data = await res.json();
+      setComplaints(data);
+    } catch (err) {
+      console.error("Error loading complaints", err);
+    }
+  };
+
+  const handlePhotoChange = (e) => {
+    const previews = Array.from(e.target.files || []).map(f => URL.createObjectURL(f));
+    setPhotos(p => [...p, ...previews].slice(0, 5));
+    e.target.value = "";
+  };
+
+  const validate = () => {
+    const e = {};
+    if (!form.title.trim()) e.title = "Please enter a complaint title.";
+    if (form.category === "Select Category") e.category = "Please select a category.";
+    if (!form.description.trim()) e.description = "Please describe the problem.";
+    return e;
+  };
+
+  const handleSubmit = async () => {
+
+    const e = validate();
+    if (Object.keys(e).length) {
+      setErrors(e);
+      return;
+    }
+
+    setErrors({});
+
+    try {
+
+      const formData = new FormData();
+
+      formData.append("issue", form.title);
+      formData.append("category", form.category);
+      formData.append("location", form.location);
+      formData.append("description", form.description);
+      formData.append("priorityLevel", form.priority);
+
+      const files = fileRef.current.files;
+
+      for (let i = 0; i < files.length; i++) {
+        formData.append("images", files[i]);
+      }
+
+      await fetch("http://localhost:8080/api/maintenance", {
+        method: "POST",
+        body: formData
+      });
+
+      showToast("Complaint submitted ✓");
+
+      setForm({
+        title: "",
+        category: "Select Category",
+        location: "Select Area",
+        description: "",
+        priority: "Low"
+      });
+
+      setPhotos([]);
+
+      fetchComplaints();
+
+    } catch (err) {
+      console.error(err);
+      showToast("Error submitting complaint");
+    }
+  };
+
+  const filtered = complaints.filter(h =>
+    h.issue?.toLowerCase().includes(search.toLowerCase()) ||
+    h.category?.toLowerCase().includes(search.toLowerCase())
+  );
+
   return (
-    <div className={styles["maintenance-page"]}>
+    <>
+      <div className={styles.page}>
 
-      <main className={styles["main-content"]}>
-
-        {/* Overview Cards */}
-        <div className={styles["overview-grid"]}>
-
-          <div className={styles["overview-card"]}>
-            <p>Total Requests</p>
-            <h2>14</h2>
-          </div>
-
-          <div className={styles["overview-card"]}>
-            <p>Open</p>
-            <h2 className={styles.primary}>3</h2>
-          </div>
-
-          <div className={styles["overview-card"]}>
-            <p>In Progress</p>
-            <h2 className={styles.warning}>2</h2>
-          </div>
-
-          <div className={styles["overview-card"]}>
-            <p>Resolved</p>
-            <h2 className={styles.success}>9</h2>
-          </div>
-
+        <div className={styles["page-header"]}>
+          <h1 className={styles["page-title"]}>Raise a Maintenance Complaint</h1>
+          <p className={styles["page-sub"]}>Report maintenance issues in your apartment.</p>
         </div>
 
-        <div className={styles["maintenance-layout"]}>
+        <div className={styles["main-grid"]}>
 
-          {/* Raise Complaint */}
-          <div className={styles["complaint-box"]}>
-            <h3>Raise a New Request</h3>
+          {/* FORM */}
+          <div className={styles.card}>
+            <h3 className={styles["card-heading"]}>
+              <span className={styles["section-icon"]}><ClipboardList size={15} strokeWidth={2.5} /></span>
+              Complaint Details
+            </h3>
 
-            <form className={styles["complaint-form"]}>
+            <div className={styles.field}>
+              <label className={styles.label}>Complaint Title</label>
+              <input
+                className={`${styles.input} ${errors.title ? styles["input-error"] : ""}`}
+                value={form.title}
+                onChange={e => setForm({ ...form, title: e.target.value })}
+              />
+              {errors.title && <span className={styles.error}>{errors.title}</span>}
+            </div>
 
-              <input placeholder="Complaint Title" type="text" />
+            <div className={styles["field-row"]}>
+              <div className={styles.field}>
+                <label className={styles.label}>Category</label>
+                <div className={styles["select-wrap"]}>
+                  <select
+                    className={styles.select}
+                    value={form.category}
+                    onChange={e => setForm({ ...form, category: e.target.value })}
+                  >
+                    {CATEGORIES.map(c => <option key={c}>{c}</option>)}
+                  </select>
+                  <ChevronDown size={14} className={styles["select-arrow"]} />
+                </div>
+              </div>
 
-              <select>
-                <option>Plumbing</option>
-                <option>Electrical</option>
-                <option>HVAC / AC</option>
-                <option>Appliances</option>
-                <option>General Repair</option>
-              </select>
+              <div className={styles.field}>
+                <label className={styles.label}>Location</label>
+                <div className={styles["select-wrap"]}>
+                  <select
+                    className={styles.select}
+                    value={form.location}
+                    onChange={e => setForm({ ...form, location: e.target.value })}
+                  >
+                    {LOCATIONS.map(l => <option key={l}>{l}</option>)}
+                  </select>
+                  <ChevronDown size={14} className={styles["select-arrow"]} />
+                </div>
+              </div>
+            </div>
 
+            <div className={styles.field}>
+              <label className={styles.label}>Detailed Description</label>
               <textarea
-                placeholder="Tell us more about the problem..."
-                rows="4"
-              ></textarea>
+                className={styles.textarea}
+                rows={5}
+                value={form.description}
+                onChange={e => setForm({ ...form, description: e.target.value })}
+              />
+            </div>
 
-              <button type="button" className={styles["submit-btn"]}>
-                Submit Request
+            <div className={styles.field}>
+              <label className={styles.label}>Upload Photos</label>
+              <div className={styles.dropzone} onClick={() => fileRef.current.click()}>
+                <CameraPlus size={34} />
+              </div>
+
+              <input
+                ref={fileRef}
+                type="file"
+                accept="image/*"
+                multiple
+                style={{ display: "none" }}
+                onChange={handlePhotoChange}
+              />
+            </div>
+
+            <div className={styles["form-actions"]}>
+              <button className={styles["submit-btn"]} onClick={handleSubmit}>
+                <Send size={15} strokeWidth={2.5} /> Submit Complaint
               </button>
-
-            </form>
+            </div>
           </div>
 
-          {/* Active Requests */}
-          <div className={styles["requests-section"]}>
+          {/* RECENT REPORTS */}
+          <div className={styles.card}>
+            <h3 className={styles["card-heading"]}>
+              <Wrench size={15} /> My Recent Reports
+            </h3>
 
-            <h3>Active Requests</h3>
+            <div className={styles["recent-list"]}>
+              {complaints.slice(0,3).map((r,i)=>{
 
-            <div className={styles["request-card"]}>
-              <h4>Kitchen Sink Leakage</h4>
-              <span className={styles["status-progress"]}>In Progress</span>
+                const meta = STATUS_META[r.status] || STATUS_META["OPEN"];
 
-              <p>
-                Water is dripping from the pipe under the sink causing a puddle.
-              </p>
+                return(
+                  <div key={r.id} className={styles["recent-item"]}>
+                    <div className={styles["recent-top"]}>
+                      <span className={`${styles["status-pill"]} ${styles[meta.cls]}`}>
+                        {meta.icon} {meta.label}
+                      </span>
+                      <span className={styles["recent-time"]}>{r.submittedDate}</span>
+                    </div>
 
-              <small>Submitted Oct 24, 2023</small>
+                    <p className={styles["recent-title"]}>{r.issue}</p>
+                    <p className={styles["recent-meta"]}>{r.category} • {r.location}</p>
+                  </div>
+                )
+
+              })}
             </div>
-
-            <div className={styles["request-card"]}>
-              <h4>Flickering Living Room Lights</h4>
-              <span className={styles["status-open"]}>Open</span>
-
-              <p>Main chandelier flickers constantly.</p>
-
-              <small>Submitted Oct 25, 2023</small>
-            </div>
-
           </div>
 
         </div>
 
-        {/* Maintenance History */}
-        <div className={styles["history-section"]}>
+        {/* HISTORY */}
+        <div className={styles.card}>
 
           <div className={styles["history-header"]}>
-            <h3>Maintenance History</h3>
-            <button className={styles["download-btn"]}>Download PDF</button>
+            <h3 className={styles["card-heading"]}>Maintenance History</h3>
+
+            <div className={styles["search-wrap"]}>
+              <Search size={13}/>
+              <input
+                className={styles["search-input"]}
+                placeholder="Search complaints..."
+                value={search}
+                onChange={e=>setSearch(e.target.value)}
+              />
+            </div>
           </div>
 
-          <table className={styles["history-table"]}>
-
+          <table className={styles.table}>
             <thead>
               <tr>
-                <th>Issue</th>
+                <th>Title</th>
                 <th>Category</th>
                 <th>Status</th>
-                <th>Submitted</th>
-                <th>Resolved</th>
+                <th>Date Submitted</th>
+                <th>Last Updated</th>
+                <th></th>
               </tr>
             </thead>
 
             <tbody>
 
-              <tr>
-                <td>Broken Door Handle</td>
-                <td>General</td>
-                <td className={styles.success}>Resolved</td>
-                <td>Sep 12 2023</td>
-                <td>Sep 14 2023</td>
-              </tr>
+              {filtered.map(h=>{
 
-              <tr>
-                <td>AC Filter Replacement</td>
-                <td>HVAC</td>
-                <td className={styles.success}>Resolved</td>
-                <td>Aug 20 2023</td>
-                <td>Aug 20 2023</td>
-              </tr>
+                const meta = STATUS_META[h.status] || STATUS_META["OPEN"];
+
+                return(
+                  <tr key={h.id}>
+                    <td className={styles["td-title"]}>{h.issue}</td>
+                    <td className={styles["td-cat"]}>{h.category}</td>
+
+                    <td>
+                      <span className={`${styles["status-pill"]} ${styles[meta.cls]}`}>
+                        {meta.icon} {meta.label}
+                      </span>
+                    </td>
+
+                    <td className={styles["td-date"]}>{h.submittedDate}</td>
+
+                    <td className={styles["td-date"]}>
+                      {h.resolvedDate ? h.resolvedDate : "Pending"}
+                    </td>
+
+                    <td>
+                      <button className={styles["more-btn"]}>
+                        <MoreHorizontal size={16}/>
+                      </button>
+                    </td>
+
+                  </tr>
+                )
+
+              })}
 
             </tbody>
 
@@ -134,8 +331,11 @@ export default function Maintenance() {
 
         </div>
 
-      </main>
+      </div>
 
-    </div>
+      <div className={`${styles.toast} ${toast ? styles["toast-show"] : ""}`}>
+        {toast}
+      </div>
+    </>
   );
 }
