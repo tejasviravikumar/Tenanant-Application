@@ -1,5 +1,7 @@
 package com.example.tenant.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -8,6 +10,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Table(name = "maintenance_image")
 public class MaintenanceImage {
 
     @Id
@@ -18,5 +21,6 @@ public class MaintenanceImage {
 
     @ManyToOne
     @JoinColumn(name = "maintenance_id")
+    @JsonIgnore   // ← breaks the Maintenance ↔ MaintenanceImage circular reference
     private Maintenance maintenance;
 }

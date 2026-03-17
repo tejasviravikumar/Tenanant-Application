@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -43,6 +44,8 @@ public class Maintenance {
     @JsonIgnore
     private Apartment apartment;
 
+    // Only serialize imagePath — never serialize the back-reference to maintenance
     @OneToMany(mappedBy = "maintenance", cascade = CascadeType.ALL)
+    @JsonIgnoreProperties("maintenance")
     private List<MaintenanceImage> images;
 }
