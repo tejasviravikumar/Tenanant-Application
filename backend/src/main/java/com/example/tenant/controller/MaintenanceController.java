@@ -95,6 +95,48 @@ public class MaintenanceController {
         return ResponseEntity.ok(maintenanceRepository.save(m));
     }
 
+    // ── DELETE /api/maintenance/{id} ─────────────────────────────────────────
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteComplaint(
+            @PathVariable Long id,
+            Authentication authentication) {
+
+        // Find the complaint
+        Maintenance m = maintenanceRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Maintenance not found: " + id));
+
+        // Verify it belongs to the authenticated tenant
+        Apartment apartment = resolveApartment(authentication.getName());
+        if (apartment == null || !m.getApartment().getId().equals(apartment.getId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "You are not allowed to delete this complaint.");
+        }
+
+        // Only OPEN complaints can be deleted
+        if (!"OPEN".equals(m.getStatus())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Only OPEN complaints can be removed. This complaint is " + m.getStatus() + ".");
+        }
+
+        // Delete image files from disk
+        if (m.getImages() != null) {
+            for (MaintenanceImage img : m.getImages()) {
+                try {
+                    Path filePath = Paths.get(System.getProperty("user.dir") + img.getImagePath());
+                    Files.deleteIfExists(filePath);
+                } catch (IOException e) {
+                    System.err.println("Could not delete image file: " + img.getImagePath());
+                }
+            }
+        }
+
+        // CascadeType.ALL on Maintenance.images handles MaintenanceImage rows automatically
+        maintenanceRepository.deleteById(id);
+
+        return ResponseEntity.noContent().build(); // 204 No Content
+    }
+
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     /**
