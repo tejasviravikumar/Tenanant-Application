@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import styles from "./Maintenance.module.css";
 import {
   Wrench, Send, ClipboardList, CheckCircle2, AlertCircle,
-  Clock3, Search, MoreHorizontal, ChevronDown, X, Image,
+  Clock3, Search, MoreHorizontal, ChevronDown, X, Image, Trash2,
 } from "lucide-react";
 
 /* ── Camera icon ─────────────────────────────────────────────── */
@@ -78,6 +78,149 @@ function Lightbox({ src, onClose }) {
   );
 }
 
+/* ── Delete Confirm Modal ────────────────────────────────────── */
+function DeleteModal({ complaint, onConfirm, onCancel, loading }) {
+  return (
+    <div style={{
+      position:"fixed", inset:0, background:"rgba(15,18,33,0.45)",
+      display:"flex", alignItems:"center", justifyContent:"center",
+      zIndex:9998, backdropFilter:"blur(4px)",
+    }}>
+      <div style={{
+        background:"#fff", borderRadius:16, padding:"28px 28px 24px",
+        width:380, boxShadow:"0 24px 60px rgba(15,18,33,0.18)",
+        animation:"fadeUp 0.18s ease",
+      }}>
+        {/* Icon */}
+        <div style={{
+          width:48, height:48, borderRadius:12,
+          background:"#fee2e2", display:"flex",
+          alignItems:"center", justifyContent:"center",
+          marginBottom:16,
+        }}>
+          <Trash2 size={22} color="#dc2626" strokeWidth={2}/>
+        </div>
+
+        <h3 style={{ margin:"0 0 8px", fontSize:16, fontWeight:700, color:"#0f172a" }}>
+          Remove Complaint?
+        </h3>
+        <p style={{ margin:"0 0 6px", fontSize:13.5, color:"#475569", lineHeight:1.5 }}>
+          Are you sure you want to remove:
+        </p>
+        <p style={{
+          margin:"0 0 20px", fontSize:13.5, fontWeight:600,
+          color:"#0f172a", background:"#f8fafc",
+          padding:"8px 12px", borderRadius:8,
+          border:"1px solid #e5e9f0",
+        }}>
+          "{complaint?.issue}"
+        </p>
+
+        {/* Only allow deleting OPEN complaints */}
+        {complaint?.status !== "OPEN" && (
+          <p style={{
+            margin:"0 0 16px", fontSize:12.5, color:"#dc2626",
+            background:"#fee2e2", padding:"8px 12px",
+            borderRadius:8, border:"1px solid #fecaca",
+          }}>
+            Only OPEN complaints can be removed. This complaint is {complaint?.status}.
+          </p>
+        )}
+
+        <div style={{ display:"flex", gap:10 }}>
+          <button onClick={onCancel} style={{
+            flex:1, padding:"10px", border:"1.5px solid #e5e9f0",
+            borderRadius:9, background:"#fff", color:"#475569",
+            fontSize:13.5, fontWeight:600, cursor:"pointer",
+            transition:"all 0.15s",
+          }}>
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={loading || complaint?.status !== "OPEN"}
+            style={{
+              flex:1, padding:"10px", border:"none",
+              borderRadius:9,
+              background: complaint?.status === "OPEN" ? "#dc2626" : "#e5e9f0",
+              color: complaint?.status === "OPEN" ? "#fff" : "#94a3b8",
+              fontSize:13.5, fontWeight:700, cursor: complaint?.status === "OPEN" ? "pointer" : "not-allowed",
+              display:"flex", alignItems:"center", justifyContent:"center", gap:7,
+              transition:"opacity 0.15s",
+              opacity: loading ? 0.7 : 1,
+            }}
+          >
+            {loading
+              ? <span style={{
+                  width:14, height:14, border:"2px solid rgba(255,255,255,0.4)",
+                  borderTopColor:"#fff", borderRadius:"50%",
+                  animation:"spin 0.7s linear infinite", display:"inline-block",
+                }}/>
+              : <Trash2 size={14} strokeWidth={2.5}/>
+            }
+            {loading ? "Removing…" : "Remove"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── Row Action Menu (... dropdown) ─────────────────────────── */
+function ActionMenu({ complaint, onDelete, onClose }) {
+  const ref = useRef();
+
+  // Close when clicking outside
+  useEffect(() => {
+    const handler = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) onClose();
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [onClose]);
+
+  const canDelete = complaint.status === "OPEN";
+
+  return (
+    <div ref={ref} style={{
+      position:"absolute", right:0, top:"100%",
+      background:"#fff", border:"1px solid #e5e9f0",
+      borderRadius:10, boxShadow:"0 8px 24px rgba(15,18,33,0.12)",
+      zIndex:100, minWidth:160, overflow:"hidden",
+      animation:"fadeDown 0.15s ease",
+    }}>
+      <button
+        onClick={() => { onDelete(); onClose(); }}
+        style={{
+          width:"100%", padding:"10px 14px",
+          display:"flex", alignItems:"center", gap:9,
+          background:"none", border:"none",
+          fontSize:13, fontWeight:600,
+          color: canDelete ? "#dc2626" : "#94a3b8",
+          cursor: canDelete ? "pointer" : "not-allowed",
+          textAlign:"left",
+          transition:"background 0.12s",
+        }}
+        onMouseEnter={e => canDelete && (e.currentTarget.style.background="#fee2e2")}
+        onMouseLeave={e => (e.currentTarget.style.background="none")}
+      >
+        <Trash2 size={14} strokeWidth={2.2}/>
+        {canDelete ? "Remove Complaint" : "Cannot Remove"}
+      </button>
+
+      {!canDelete && (
+        <p style={{
+          margin:0, padding:"6px 14px 10px",
+          fontSize:11, color:"#94a3b8", lineHeight:1.4,
+          borderTop:"1px solid #f0f3fa",
+        }}>
+          Only OPEN complaints can be removed.
+        </p>
+      )}
+    </div>
+  );
+}
+
 /* ── Component ───────────────────────────────────────────────── */
 export default function Maintenance() {
   const [form, setForm]                   = useState(EMPTY_FORM);
@@ -90,6 +233,11 @@ export default function Maintenance() {
   const [loading, setLoading]             = useState(false);
   const [lightbox, setLightbox]           = useState(null);
   const [expandedRow, setExpandedRow]     = useState(null);
+
+  // Delete state
+  const [menuOpenId,      setMenuOpenId]      = useState(null); // which row's ... menu is open
+  const [deleteTarget,    setDeleteTarget]    = useState(null); // complaint to delete
+  const [deleteLoading,   setDeleteLoading]   = useState(false);
 
   const fileRef = useRef();
 
@@ -111,6 +259,29 @@ export default function Maintenance() {
       setComplaints(data.sort((a,b) => new Date(b.submittedDate) - new Date(a.submittedDate)));
     } catch {
       showToast("Could not load complaints.", "error");
+    }
+  };
+
+  // ── DELETE handler ────────────────────────────────────────────
+  // Calls DELETE /api/maintenance/{id}
+  // Only allowed for OPEN complaints — enforced both here and in backend
+  const handleDelete = async () => {
+    if (!deleteTarget || deleteTarget.status !== "OPEN") return;
+    setDeleteLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/maintenance/${deleteTarget.id}`, {
+        method: "DELETE",
+        headers: { ...getAuthHeaders() },
+      });
+      if (!res.ok) throw new Error(await res.text());
+      // Remove from local state instantly — no refetch needed
+      setComplaints(prev => prev.filter(c => c.id !== deleteTarget.id));
+      showToast("Complaint removed successfully.");
+    } catch (err) {
+      showToast(err.message || "Failed to remove complaint.", "error");
+    } finally {
+      setDeleteLoading(false);
+      setDeleteTarget(null);
     }
   };
 
@@ -176,7 +347,6 @@ export default function Maintenance() {
     h.category?.toLowerCase().includes(search.toLowerCase())
   );
 
-  /* ── Counts for summary strip ─────────────────────────────── */
   const counts = {
     open:       complaints.filter(c => c.status === "OPEN").length,
     inProgress: complaints.filter(c => c.status === "IN PROGRESS").length,
@@ -186,6 +356,16 @@ export default function Maintenance() {
   return (
     <>
       {lightbox && <Lightbox src={lightbox} onClose={() => setLightbox(null)}/>}
+
+      {/* Delete confirm modal */}
+      {deleteTarget && (
+        <DeleteModal
+          complaint={deleteTarget}
+          onConfirm={handleDelete}
+          onCancel={() => setDeleteTarget(null)}
+          loading={deleteLoading}
+        />
+      )}
 
       <div className={styles.page}>
 
@@ -204,7 +384,6 @@ export default function Maintenance() {
               New Complaint
             </h3>
 
-            {/* Title */}
             <div className={styles.field}>
               <label className={styles.label}>Complaint Title</label>
               <input
@@ -216,7 +395,6 @@ export default function Maintenance() {
               {errors.title && <span className={styles.error}>{errors.title}</span>}
             </div>
 
-            {/* Category + Location */}
             <div className={styles["field-row"]}>
               <div className={styles.field} style={{marginBottom:0}}>
                 <label className={styles.label}>Category</label>
@@ -248,7 +426,6 @@ export default function Maintenance() {
               </div>
             </div>
 
-            {/* Description */}
             <div className={styles.field}>
               <label className={styles.label}>Description</label>
               <textarea
@@ -261,7 +438,6 @@ export default function Maintenance() {
               {errors.description && <span className={styles.error}>{errors.description}</span>}
             </div>
 
-            {/* Priority */}
             <div className={styles.field}>
               <label className={styles.label}>Priority</label>
               <div className={styles["priority-group"]}>
@@ -286,7 +462,6 @@ export default function Maintenance() {
               </div>
             </div>
 
-            {/* Photos */}
             <div className={styles.field}>
               <label className={styles.label}>
                 Photos
@@ -380,7 +555,6 @@ export default function Maintenance() {
               })}
             </div>
 
-            {/* Summary counts */}
             {complaints.length > 0 && (
               <div style={{
                 display:"grid", gridTemplateColumns:"1fr 1fr 1fr",
@@ -452,6 +626,7 @@ export default function Maintenance() {
                 const meta     = STATUS_META[h.status] || STATUS_META["OPEN"];
                 const pm       = PRIORITY_META[h.priorityLevel];
                 const expanded = expandedRow === h.id;
+                const menuOpen = menuOpenId === h.id;
 
                 return (
                   <>
@@ -498,10 +673,28 @@ export default function Maintenance() {
                         )}
                       </td>
 
-                      <td>
-                        <button className={styles["more-btn"]} aria-label="More">
+                      {/* ── ... menu button ── */}
+                      <td style={{ position:"relative" }}>
+                        <button
+                          className={styles["more-btn"]}
+                          aria-label="More options"
+                          onClick={() => setMenuOpenId(menuOpen ? null : h.id)}
+                          style={{
+                            background: menuOpen ? "#f0f3fa" : "none",
+                            borderRadius: 6,
+                          }}
+                        >
                           <MoreHorizontal size={15}/>
                         </button>
+
+                        {/* Dropdown menu */}
+                        {menuOpen && (
+                          <ActionMenu
+                            complaint={h}
+                            onDelete={() => setDeleteTarget(h)}
+                            onClose={() => setMenuOpenId(null)}
+                          />
+                        )}
                       </td>
                     </tr>
 
@@ -548,6 +741,21 @@ export default function Maintenance() {
       >
         {toast.msg}
       </div>
+
+      {/* Keyframe animations */}
+      <style>{`
+        @keyframes fadeDown {
+          from { opacity: 0; transform: translateY(-6px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeUp {
+          from { opacity: 0; transform: translateY(8px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
     </>
   );
 }

@@ -18,14 +18,16 @@ import {
   History,
   Send,
 } from "lucide-react";
+import { generateReceipt } from "./generateReceipt"; // ← receipt generator
 
 function MainPage() {
   const navigate = useNavigate();
 
-  const [user, setUser]         = useState(null);
-  const [payments, setPayments] = useState([]);
+  const [user,        setUser]        = useState(null);
+  const [payments,    setPayments]    = useState([]);
   const [maintenance, setMaintenance] = useState([]);
-  const [loading, setLoading]   = useState(true);
+  const [loading,     setLoading]     = useState(true);
+  const [downloading, setDownloading] = useState(null); // track which receipt is generating
 
   const token = localStorage.getItem("token");
 
@@ -74,7 +76,7 @@ function MainPage() {
   // Latest unpaid rent entry (if any)
   const unpaidRent = payments.find((p) => p.rentPaid === false);
 
-  // Next due date — from unpaid record's lastDateToPay, or auto-calculate as 5th of next month
+  // Next due date
   const nextDueDate = unpaidRent?.lastDateToPay
     ? new Date(unpaidRent.lastDateToPay).toLocaleDateString("en-IN", {
         day: "numeric", month: "long", year: "numeric",
@@ -87,27 +89,23 @@ function MainPage() {
           });
       })();
 
-  // Pending dues = sum of unpaid rent + maintenance amounts
+  // Pending dues
   const pendingDues = payments
     .filter((p) => p.rentPaid === false || p.maintenancePaid === false)
     .reduce((sum, p) => {
       let amt = 0;
-      if (!p.rentPaid) amt += p.rentAmount ?? 0;
+      if (!p.rentPaid)        amt += p.rentAmount    ?? 0;
       if (!p.maintenancePaid) amt += p.maintenanceFee ?? 0;
       return sum + amt;
     }, 0);
 
-  // Backend already returns: unpaid first, then 5 most recent paid — use as-is
   const last6MonthsPayments = payments;
+  const recentMaintenance   = maintenance.slice(0, 2);
 
-  // Only show the 2 most recent maintenance requests on the dashboard
-  const recentMaintenance = maintenance.slice(0, 2);
-
-  // Category → icon mapping
   const categoryIcon = (category = "") => {
     const c = category.toLowerCase();
     if (c.includes("water") || c.includes("plumb") || c.includes("leak")) return <Droplets size={18} strokeWidth={1.8} />;
-    if (c.includes("ac") || c.includes("air") || c.includes("hvac")) return <Wind size={18} strokeWidth={1.8} />;
+    if (c.includes("ac")    || c.includes("air")   || c.includes("hvac")) return <Wind    size={18} strokeWidth={1.8} />;
     return <Wrench size={18} strokeWidth={1.8} />;
   };
 
@@ -117,6 +115,21 @@ function MainPage() {
           day: "2-digit", month: "short", year: "numeric",
         })
       : "—";
+
+  // ── Download handler ──────────────────────────────────────────────────────
+  // Calls generateReceipt() with the payment row + user + apartment.
+  // All data is already in state — no extra API call needed.
+  const handleDownload = (payment) => {
+    setDownloading(payment.id);
+    try {
+      generateReceipt(payment, user, apartment);
+    } catch (err) {
+      console.error("Receipt generation failed:", err);
+    } finally {
+      // Small delay so the spinner is visible
+      setTimeout(() => setDownloading(null), 800);
+    }
+  };
 
   return (
     <div className={styles.page}>
@@ -280,7 +293,10 @@ function MainPage() {
         <div className={styles["payment-table-header"]}>
           <span className={styles["card-heading"]}>
             <span className={styles["section-icon"]}><History size={16} strokeWidth={2.5} /></span>
-            Payment History <span style={{ fontWeight: 400, fontSize: "0.8rem", opacity: 0.6 }}>(Last 6 months)</span>
+            Payment History{" "}
+            <span style={{ fontWeight: 400, fontSize: "0.8rem", opacity: 0.6 }}>
+              (Last 6 months)
+            </span>
           </span>
         </div>
 
@@ -304,10 +320,12 @@ function MainPage() {
             ) : (
               last6MonthsPayments.map((p) => {
                 const total =
-                  (p.rentAmount ?? 0) +
+                  (p.rentAmount    ?? 0) +
                   (p.maintenanceFee ?? 0) +
-                  (p.additionalFee ?? 0);
+                  (p.additionalFee  ?? 0);
                 const isPaid = p.rentPaid && p.maintenancePaid;
+                const isDownloading = downloading === p.id;
+
                 return (
                   <tr key={p.id}>
                     <td>{p.month ?? "—"}</td>
@@ -324,8 +342,17 @@ function MainPage() {
                     <td>{p.paymentDate ? formatDate(p.paymentDate) : "—"}</td>
                     <td>
                       {isPaid ? (
-                        <button className={styles["receipt-btn"]}>
-                          <Download size={14} strokeWidth={2.2} />
+                        // ── Download button — triggers generateReceipt() ──
+                        <button
+                          className={styles["receipt-btn"]}
+                          onClick={() => handleDownload(p)}
+                          disabled={isDownloading}
+                          title={`Download receipt for ${p.month}`}
+                        >
+                          {isDownloading
+                            ? <span className={styles["receipt-spinner"]} />
+                            : <Download size={14} strokeWidth={2.2} />
+                          }
                         </button>
                       ) : (
                         <span style={{ opacity: 0.35, fontSize: "0.8rem" }}>—</span>
