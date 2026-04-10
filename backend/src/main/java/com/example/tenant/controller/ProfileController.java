@@ -20,6 +20,7 @@ public class ProfileController {
     @GetMapping
     public Map<String, Object> getProfile(Authentication authentication) {
         String email = authentication.getName();
+
         UserDetails user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -32,6 +33,7 @@ public class ProfileController {
             @RequestBody UserDetails updatedUser
     ) {
         String email = authentication.getName();
+
         UserDetails user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 

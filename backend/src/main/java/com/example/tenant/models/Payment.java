@@ -12,7 +12,10 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@Table(name ="payments")
+@Table(
+    name = "payments",
+    uniqueConstraints = @UniqueConstraint(columnNames = {"month", "apartment_id"})
+)
 public class Payment {
 
     @Id

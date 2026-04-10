@@ -26,53 +26,66 @@ public class PaymentController {
     private final UserRepository userRepository;
     private final ApartmentRepository apartmentRepository;
 
-    // Get last 5 paid + unpaid payments for the logged-in tenant
     @GetMapping
     public ResponseEntity<?> getPayments(Authentication authentication) {
+
         String email = authentication.getName();
 
         UserDetails user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 
-        // apartment.id == user.id because of @MapsId
-        Long apartmentId = user.getId();
-
-        Apartment apartment = apartmentRepository.findById(apartmentId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No apartment linked to user: " + email));
+        Apartment apartment = apartmentRepository.findById(user.getId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Apartment not found"));
 
         return ResponseEntity.ok(paymentService.getLast6MonthsPayments(apartment.getId()));
     }
 
-    // Get ALL payments for the logged-in tenant
     @GetMapping("/all")
     public ResponseEntity<?> getAllPayments(Authentication authentication) {
+
         String email = authentication.getName();
 
         UserDetails user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 
-        Long apartmentId = user.getId();
-
-        Apartment apartment = apartmentRepository.findById(apartmentId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No apartment linked to user: " + email));
+        Apartment apartment = apartmentRepository.findById(user.getId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Apartment not found"));
 
         return ResponseEntity.ok(paymentService.getPaymentsByApartment(apartment.getId()));
     }
 
-    // Pay rent / maintenance
     @PostMapping
     public ResponseEntity<?> createPayment(@RequestBody Payment payment, Authentication authentication) {
+
         String email = authentication.getName();
 
         UserDetails user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 
-        Long apartmentId = user.getId();
+        Apartment apartment = apartmentRepository.findById(user.getId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Apartment not found"));
 
-        Apartment apartment = apartmentRepository.findById(apartmentId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No apartment linked to user: " + email));
+        // 🔥 Check existing payment
+        Payment existingPayment = paymentService
+                .getPaymentByMonthAndApartment(payment.getMonth(), apartment.getId());
 
+        // ❌ Already paid
+        if (existingPayment != null && Boolean.TRUE.equals(existingPayment.getRentPaid())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Already paid for this month");
+        }
+
+        // ✅ Update existing
+        if (existingPayment != null) {
+            existingPayment.setRentPaid(true);
+            existingPayment.setMaintenancePaid(payment.getMaintenancePaid());
+            existingPayment.setPaymentDate(LocalDate.now());
+
+            return ResponseEntity.ok(paymentService.save(existingPayment));
+        }
+
+        // ✅ Create new
         payment.setApartment(apartment);
+        payment.setRentPaid(true);
         payment.setPaymentDate(LocalDate.now());
 
         return ResponseEntity.ok(paymentService.createPayment(payment));
