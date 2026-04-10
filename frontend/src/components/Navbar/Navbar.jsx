@@ -1,4 +1,3 @@
-import { Bell } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { useState, useEffect } from "react";
 import styles from "./Navbar.module.css";
@@ -53,10 +52,6 @@ function Navbar() {
       <div className={styles["right-section"]}>
         {isLoggedIn ? (
           <>
-            <NavLink to="/notifications" className={styles["bell-btn"]}>
-              <Bell size={18} strokeWidth={2} />
-              <span className={styles["bell-dot"]} />
-            </NavLink>
             <Pfp />
           </>
         ) : (

@@ -1,22 +1,12 @@
 import { useRef, useState, useEffect } from "react";
 import styles from "./Profile.module.css";
 import { useAvatar } from "../Avatarcontent/Avatarcontent";
-import {
-  MapPin,
-  User,
-  Key,
-  Settings,
-  Lock,
-  Bell,
-  FileDown,
-  LogOut,
-} from "lucide-react";
+import { MapPin, User, Key } from "lucide-react";
 
 function Profile() {
   const { avatarSrc, setAvatarSrc, DEFAULT_AVATAR } = useAvatar();
   const hasCustomAvatar = avatarSrc !== DEFAULT_AVATAR;
   const [toast, setToast] = useState(false);
-  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -32,20 +22,16 @@ function Profile() {
 
   const fileRef = useRef();
 
-  // Helper: get JWT token from localStorage
   const getToken = () => localStorage.getItem("token");
 
-  // Helper: build auth headers
   const authHeaders = () => ({
     "Content-Type": "application/json",
     Authorization: `Bearer ${getToken()}`,
   });
 
-  // Fetch profile data
   useEffect(() => {
     const token = getToken();
     if (!token) {
-      // No token — redirect to login
       window.location.href = "/login";
       return;
     }
@@ -54,13 +40,10 @@ function Profile() {
     setError(null);
 
     fetch("http://localhost:8080/api/profile", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+      headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => {
         if (res.status === 401) {
-          // Token expired or invalid
           localStorage.removeItem("token");
           window.location.href = "/login";
           return;
@@ -113,7 +96,6 @@ function Profile() {
   };
 
   const handleSave = () => {
-    // Only send the fields the backend's updateProfile accepts
     const payload = {
       firstname: profile.firstname,
       lastname: profile.lastname,
@@ -138,7 +120,6 @@ function Profile() {
       })
       .then((updatedUser) => {
         if (!updatedUser) return;
-        // Merge updated fields back; keep apartment data intact
         setProfile((prev) => ({ ...prev, ...updatedUser }));
         showToast("Profile updated ✓");
         setEditMode(false);
@@ -147,15 +128,6 @@ function Profile() {
         console.error(err);
         showToast("Failed to update profile ✗");
       });
-  };
-
-  const handleLogout = () => setShowLogoutModal(true);
-  const cancelLogout = () => setShowLogoutModal(false);
-  const confirmLogout = () => {
-    setShowLogoutModal(false);
-    localStorage.removeItem("token"); // Clear JWT
-    showToast("Logging out…");
-    setTimeout(() => (window.location.href = "/login"), 1000);
   };
 
   if (loading) {
@@ -276,7 +248,6 @@ function Profile() {
 
             <div className={styles["info-item"]}>
               <label>Email</label>
-              {/* Email is not updatable via the backend endpoint — read-only */}
               <p>{profile.email}</p>
             </div>
 
@@ -381,63 +352,7 @@ function Profile() {
             </div>
           </div>
         </div>
-
-        {/* Account Settings */}
-        <div className={`${styles.card} ${styles["account-settings"]}`}>
-          <h3>
-            <span className={styles["section-icon"]}>
-              <Settings size={16} strokeWidth={2.5} />
-            </span>
-            Account Settings
-          </h3>
-
-          <div className={styles["settings-grid"]}>
-            <div className={styles["setting-card"]}>
-              <Lock size={26} strokeWidth={1.8} className={styles["setting-icon"]} />
-              <p>Change Password</p>
-            </div>
-
-            <div className={styles["setting-card"]}>
-              <Bell size={26} strokeWidth={1.8} className={styles["setting-icon"]} />
-              <p>Notification Prefs</p>
-            </div>
-
-            <div className={styles["setting-card"]}>
-              <FileDown size={26} strokeWidth={1.8} className={styles["setting-icon"]} />
-              <p>Download Docs</p>
-            </div>
-
-            <div
-              className={`${styles["setting-card"]} ${styles.logout}`}
-              onClick={handleLogout}
-            >
-              <LogOut size={26} strokeWidth={1.8} className={styles["setting-icon"]} />
-              <p>Logout Account</p>
-            </div>
-          </div>
-        </div>
       </div>
-
-      {/* Logout Modal */}
-      {showLogoutModal && (
-        <div className={styles["modal-backdrop"]} onClick={cancelLogout}>
-          <div className={styles["modal"]} onClick={(e) => e.stopPropagation()}>
-            <div className={styles["modal-icon"]}>
-              <LogOut size={28} strokeWidth={1.8} />
-            </div>
-            <h4>Log out of Skyview?</h4>
-            <p>You'll need to sign in again to access your account.</p>
-            <div className={styles["modal-actions"]}>
-              <button className={styles["modal-cancel"]} onClick={cancelLogout}>
-                Cancel
-              </button>
-              <button className={styles["modal-confirm"]} onClick={confirmLogout}>
-                Yes, Log Out
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Toast */}
       <div className={`${styles["upload-toast"]} ${toast ? styles.show : ""}`}>

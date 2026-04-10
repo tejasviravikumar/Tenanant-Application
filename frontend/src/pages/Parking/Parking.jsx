@@ -386,7 +386,6 @@ export default function Parking() {
               <span className={styles.tenantApt}>{apartment?.propertyName}</span>
             </div>
 
-            <button className={styles.updateVehicleBtn}>Update Vehicle Details</button>
           </div>
 
           {/* Parking Rules */}
